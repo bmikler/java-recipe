@@ -4,6 +4,12 @@ import recipes.dto.RecipeDto;
 import recipes.dto.RecipeDtoMapper;
 import recipes.dto.RecipeDtoSaved;
 
+import java.lang.reflect.Array;
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @org.springframework.stereotype.Service
 public class RecipeService {
 
@@ -22,12 +28,49 @@ public class RecipeService {
                 .orElseThrow(RecipeNotFoundException::new);
     }
 
+    public List<RecipeDto> findByCategory(String category) {
+
+        return recipeRepository.findRecipeByCategoryIgnoreCase(category)
+                .stream()
+                .map(recipeDtoMapper::map)
+                .sorted(Comparator.comparing(RecipeDto::getDate).reversed())
+                .collect(Collectors.toList());
+
+    }
+
+    public List<RecipeDto> findByName(String name) {
+
+        return recipeRepository.findRecipeByNameContainsIgnoreCase(name)
+                .stream()
+                .map(recipeDtoMapper::map)
+                .sorted(Comparator.comparing(RecipeDto::getDate).reversed())
+                .collect(Collectors.toList());
+
+    }
+
     public RecipeDtoSaved addNewRecipe(RecipeDto recipeDto) {
 
         Recipe recipe = recipeDtoMapper.map(recipeDto);
+        recipe.setDate(LocalDateTime.now());
 
         Recipe recipeSaved = recipeRepository.save(recipe);
         return recipeDtoMapper.mapSaved(recipeSaved);
+
+    }
+
+    public RecipeDto editRecipeByID(Long id, RecipeDto recipeDto) {
+
+        if(recipeRepository.findById(id).isEmpty()){
+            throw new RecipeNotFoundException();
+        }
+
+        Recipe recipe = recipeDtoMapper.map(recipeDto);
+        recipe.setId(id);
+        recipe.setDate(LocalDateTime.now());
+
+        Recipe recipeSaved = recipeRepository.save(recipe);
+
+        return recipeDtoMapper.map(recipeSaved);
 
     }
 

@@ -17,6 +17,8 @@ public class RecipeDtoMapper {
         return new Recipe(
                 null,
                 recipe.getName(),
+                recipe.getCategory(),
+                recipe.getDate(),
                 recipe.getDescription(),
                 recipe.getIngredients(),
                 recipe.getDirections()
@@ -28,6 +30,8 @@ public class RecipeDtoMapper {
 
         return new RecipeDto(
                 recipe.getName(),
+                recipe.getCategory(),
+                recipe.getDate(),
                 recipe.getDescription(),
                 recipe.getIngredients(),
                 recipe.getDirections()
