@@ -2,6 +2,10 @@ package recipes.recipe;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import recipes.recipe.dto.RecipeDto;
@@ -21,13 +25,14 @@ public class RecipeController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     RecipeDto getRecipe(@PathVariable Long id) {
-
         return service.getRecipeById(id);
 
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasRole('ROLE_USER')")
     List<RecipeDto> findRecipeByCategoryOrName (@RequestParam(required = false) String category,
                                                 @RequestParam(required = false) String name) {
 
@@ -43,26 +48,47 @@ public class RecipeController {
 
     }
 
-    @PutMapping("/{id}")
-    ResponseEntity<RecipeDto> editRecipe(@PathVariable Long id, @Valid @RequestBody RecipeDto recipeDto) {
-
-        service.editRecipeByID(id, recipeDto);
-
-        return ResponseEntity.noContent().build();
-
-    }
 
     @PostMapping("/new")
-    ResponseEntity<RecipeDtoSaved> addRecipe(@Valid @RequestBody RecipeDto recipe) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    ResponseEntity<RecipeDtoSaved> addRecipe(@Valid @RequestBody RecipeDto recipe,
+                                             @AuthenticationPrincipal UserDetails userDetails) {
 
-        RecipeDtoSaved recipeSaved = service.addNewRecipe(recipe);
+        RecipeDtoSaved recipeSaved = service.addNewRecipe(recipe, userDetails);
 
         return ResponseEntity.ok(recipeSaved);
 
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    ResponseEntity<RecipeDto> editRecipe(@PathVariable Long id,
+                                         @Valid @RequestBody RecipeDto recipeDto,
+                                         @AuthenticationPrincipal UserDetails details) {
+
+        String authorEmail = service.getRecipeAuthorEmail(id);
+
+        if(!details.getUsername().equals(authorEmail)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        service.editRecipeByID(id, recipeDto, details);
+
+        return ResponseEntity.noContent().build();
+
+    }
+
+
     @DeleteMapping("/{id}")
-    ResponseEntity<?> deleteRecipeById(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    ResponseEntity<?> deleteRecipeById(@PathVariable Long id,
+                                       @AuthenticationPrincipal UserDetails details) {
+
+        String authorEmail = service.getRecipeAuthorEmail(id);
+
+        if(!details.getUsername().equals(authorEmail)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 
         service.deleteRecipeById(id);
 

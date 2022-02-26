@@ -12,4 +12,5 @@ interface RecipeRepository extends JpaRepository<Recipe,Long> {
 
     List<Recipe> findRecipeByNameContainsIgnoreCase(String name);
 
+
 }

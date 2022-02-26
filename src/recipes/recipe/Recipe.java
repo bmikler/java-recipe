@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import recipes.user.User;
-import recipes.user.UserDto;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -34,6 +33,7 @@ public class Recipe {
     @NotEmpty
     private String[] directions;
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User author;
 
 
